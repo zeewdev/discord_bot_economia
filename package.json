@@ -1,0 +1,22 @@
+{
+  "name": "bot_eco",
+  "version": "1.0.0",
+  "description": "Bot de economia con zeew-eco en discordjs@13",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "repository": "https://github.com/zeewdev/discord_bot_economia.git",
+  "author": "KamerrEzz <proyects@kamerrezz.com> (https://kamerrezz.com)",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "discord.js": "^13.3.1",
+    "dotenv": "^10.0.0",
+    "zeew-eco": "zeewdev/zeew-eco"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
