@@ -1,78 +1,138 @@
-const { Client, Interaction } = require('discord.js');
+const { Client, CommandInteraction, ApplicationCommandOptionData } = require('discord.js');
 const { economia, banco, embed } = require('../config');
+
 module.exports = {
-    name: 'economia',
-    description: 'Comandos de economia',
-    /**
-    *
-    * @param {Client} client 
-    * @param {Interaction} int 
-    */
-    options: [
-        {
-            name: 'user',
-            description: 'Ver el dinero de un usuario',
-            type: 6,
-        },
-        {
-            name: 'agregar',
-            description: 'Agregar dinero a un usuario',
-            type: 10,
-        },
-        {
-            name: 'quitar',
-            description: 'Quitar dinero a un usuario',
-            type: 10,
-        },
-        {
-            name: 'comprar',
-            description: 'Comprar un item',
-            type: 3,
-        }
-    ],
-    /**
-     * 
-     * @param {Client} client 
-     * @param {Interaction} int 
-     */
-    async zeewRun(client, int) {
+	name: 'economia',
+	description: 'Comandos de economia',
 
-        const ver = int.options.get('ver');
-        const agregar = int.options.get('agregar');
-        const quitar = int.options.get('quitar');
-        const comprar = int.options.get('comprar');
+	/**
+	 * @type {ApplicationCommandOptionData[]}
+	 */
+	options: [
+		{
+			name: 'ver',
+			description: 'Ver el dinero de un usuario',
+			type: 'SUB_COMMAND',
+			options: [
+				{
+					description: 'Selecciona un usuario',
+					name: 'user',
+					type: 'USER',
+					required: false
+				}
+			]
+		},
+		{
+			name: 'agregar',
+			description: 'Agregar dinero a un usuario',
+			type: 'SUB_COMMAND',
+			options: [
+				{
+					description: 'Selecciona un usuario',
+					name: 'user',
+					type: 'USER',
+					required: true
+				},
+				{
+					description: 'Selecciona una cantidad',
+					name: 'cantidad',
+					type: 'INTEGER',
+					required: true
+				}
+			]
+		},
+		{
+			name: 'quitar',
+			description: 'Quitar dinero a un usuario',
+			type: 'SUB_COMMAND',
+			options: [
+				{
+					description: 'Selecciona un usuario',
+					name: 'user',
+					type: 'USER',
+					required: true
+				},
+				{
+					description: 'Selecciona una cantidad',
+					name: 'cantidad',
+					type: 'INTEGER',
+					required: true
+				}
+			]
+		},
+		{
+			name: 'comprar',
+			description: 'Comprar un item',
+			type: 'SUB_COMMAND',
+			options: [
+				{
+					description: 'La ID del item',
+					name: 'id',
+					type: 'STRING',
+					required: true
+				}
+			]
+		}
+	],
+	/**
+	 *
+	 * @param {Client} client
+	 * @param {CommandInteraction} int
+	 */
+	async zeewRun(client, int) {
+		const comando = int.options.getSubcommand();
 
-        if (!ver && agregar) return int.reply('Necesitas mencionar a un usuario para agregarle dinero');
-        if (!ver && quitar) return int.reply('Necesitas mencionar a un usuario para quitarle dinero');
-        if (!ver && comprar) return int.reply('Necesitas mencionar a un usuario para comprar un item');
+		if (comando == 'ver') {
+			const usuario = int.options.getUser('user') || int.user;
 
-        if (ver && agregar) {
-            if (!int.memberPermissions.has('ADMINISTRATOR')) return int.reply('No tienes permisos para usar este comando, debes ser administrador')
-            const verEco = await economia.ver(ver.user.id, int.guildId)
-            const agregarEco = await economia.agregar(ver.user.id, int.guildId, agregar.value)
-            console.log({
-                verEco,
-                agregarEco: agregar.value
-            });
-            const embedMessage = embed(`${ver.user.username}`, `• Dinero agregado: ${agregar.value} \n • Dinero: ${verEco} \n • Actual Dinero: ${agregarEco}`);
-            return int.reply({ embeds: [embedMessage] });
-        }
+			const verEco = await economia.ver(usuario.id, int.guildId);
+			const verBanco = await banco.ver(usuario.id, int.guildId);
+			const embedMessage = embed(
+				`${usuario.username}`,
+				`• Dinero: ${verEco} \n • Banco: ${verBanco} `
+			);
+			return int.reply({ embeds: [embedMessage] });
+		}
 
-        if (ver && quitar) {
-            if (!int.memberPermissions.has('ADMINISTRATOR')) return int.reply('No tienes permisos para usar este comando, debes ser administrador')
-            const verEco = await economia.ver(ver.user.id, int.guildId)
-            const quitarEco = await economia.remover(ver.user.id, int.guildId, quitar.value)
-            const embedMessage = embed(`${ver.user.username}`, `• Dinero removido: ${quitar.value} \n • Dinero: ${verEco} \n • Nuevo Dinero: ${quitarEco}`);
-            return int.reply({ embeds: [embedMessage] });
-        }
+		if (comando == 'agregar') {
+			const usuario = int.options.getUser('user');
+			const agregar = int.options.getInteger('cantidad');
 
-        if (ver) {
-            const verEco = await economia.ver(ver.user.id, int.guildId)
-            const verBanco = await banco.ver(ver.user.id, int.guildId)
-            const embedMessage = embed(`${ver.user.username}`, `• Dinero: ${verEco} \n • Banco: ${verBanco} `);
-            return int.reply({ embeds: [embedMessage] });
-        }
+			if (!int.memberPermissions.has('ADMINISTRATOR'))
+				return int.reply(
+					'No tienes permisos para usar este comando, debes ser administrador'
+				);
+			const verEco = await economia.ver(usuario.id, int.guildId);
+			const agregarEco = await economia.agregar(usuario.id, int.guildId, agregar);
+			console.log({
+				verEco,
+				agregarEco: agregar
+			});
+			const embedMessage = embed(
+				`${usuario.username}`,
+				`• Dinero agregado: ${agregar} \n • Dinero: ${verEco} \n • Actual Dinero: ${agregarEco}`
+			);
+			return int.reply({ embeds: [embedMessage] });
+		}
 
-        int.reply('Comandos de economia');
-    }
-}
+		if (comando == 'quitar') {
+			const usuario = int.options.getUser('user');
+			const quitar = int.options.getInteger('cantidad');
+
+			if (!int.memberPermissions.has('ADMINISTRATOR'))
+				return int.reply(
+					'No tienes permisos para usar este comando, debes ser administrador'
+				);
+			const verEco = await economia.ver(usuario.id, int.guildId);
+			const quitarEco = await economia.remover(usuario.id, int.guildId, quitar);
+			const embedMessage = embed(
+				`${usuario.username}`,
+				`• Dinero removido: ${quitar} \n • Dinero: ${verEco} \n • Nuevo Dinero: ${quitarEco}`
+			);
+			return int.reply({ embeds: [embedMessage] });
+		}
+
+		if (comando == 'comprar') {
+		}
+	}
+};
