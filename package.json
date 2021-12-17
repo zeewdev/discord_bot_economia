@@ -17,6 +17,7 @@
     "zeew-eco": "zeewdev/zeew-eco"
   },
   "devDependencies": {
+    "eslint": "^8.4.1",
     "nodemon": "^2.0.15"
   }
 }
